@@ -1,0 +1,5 @@
+PRJ wamp
+S src
+B _build/src
+PKG ppx_deriving.std
+PKG ppx_deriving_yojson

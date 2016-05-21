@@ -1,0 +1,8 @@
+version = "0.1"
+description = "WAMP helper functions"
+requires = "ppx_deriving.std ppx_deriving_yojson"
+archive(byte) = "wamp.cma"
+archive(byte, plugin) = "wamp.cma"
+archive(native) = "wamp.cmxa"
+archive(native, plugin) = "wamp.cmxs"
+exists_if = "wamp.cma"
