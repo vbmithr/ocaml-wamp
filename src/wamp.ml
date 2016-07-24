@@ -1,71 +1,188 @@
-type error =
-  | Invalid_uri
-  | No_such_procedure
-  | Procedure_already_exists
-  | No_such_registration
-  | No_such_subscription
-  | Invalid_argument
-  | System_shutdown
-  | Close_realm
-  | Goodbye_and_out
-  | Not_authorized
-  | Authorization_failed
-  | No_such_realm
-  | No_such_role
+module Uri = struct
+  include Uri
+  let of_yojson = function
+    | `String uri -> begin
+        try Ok (Uri.of_string uri) with exn -> Error "Uri.of_yojson"
+      end
+    | #Yojson.Safe.json -> Error "Uri.of_yojson"
 
-let show_error = function
-  | Invalid_uri -> "wamp.error.invalid_uri"
-  | No_such_procedure -> "wamp.error.no_such_procedure"
-  | Procedure_already_exists -> "wamp.error.procedure_already_exists"
-  | No_such_registration -> "wamp.error.no_such_registration"
-  | No_such_subscription -> "wamp.error.no_such_subscription"
-  | Invalid_argument -> "wamp.error.invalid_argument"
-  | System_shutdown -> "wamp.error.system_shutdown"
-  | Close_realm -> "wamp.error.close_realm"
-  | Goodbye_and_out -> "wamp.error.goodbye_and_out"
-  | Not_authorized -> "wamp.error.not_authorized"
-  | Authorization_failed -> "wamp.error.authorization_failed"
-  | No_such_realm -> "wamp.error.no_such_realm"
-  | No_such_role -> "wamp.error.no_such_role"
+  let to_yojson uri = `String (Uri.to_string uri)
+end
 
-type msgtype =
-  | Hello [@value 1]
-  | Welcome
-  | Abort
-  | Goodbye [@value 6]
-  | Error [@value 8]
-  | Publish [@value 16]
-  | Published
-  | Subscribe [@value 32]
-  | Subscribed
-  | Unsubscribe
-  | Unsubscribed
-  | Event
-  | Call [@value 48]
-  | Result [@value 50]
-  | Register [@value 64]
-  | Registered
-  | Unregister
-  | Unregistered
-  | Invocation
-  | Yield [@value 70]
-  [@@deriving show,enum]
+module WList = struct
+  type t = Yojson.Safe.json list
+  let of_yojson = function
+    | `List l -> Ok l
+    | #Yojson.Safe.json -> Error "List.of_yojson"
 
-type msg = {
-  typ: msgtype;
-  content: Yojson.Safe.json list;
-} [@@deriving create]
+  let to_yojson l = `List l
+end
 
-let msg_of_json = function
+module Dict = struct
+  type t = (string * Yojson.Safe.json) list
+  let of_yojson = function
+    | `Assoc dict -> Ok dict
+    | #Yojson.Safe.json -> Error "Dict.of_yojson"
+
+  let to_yojson dict = `Assoc dict
+end
+
+type msgtyp =
+  | HELLO [@value 1]
+  | WELCOME
+  | ABORT
+  | GOODBYE [@value 6]
+  | ERROR [@value 8]
+  | PUBLISH [@value 16]
+  | PUBLISHED
+  | SUBSCRIBE [@value 32]
+  | SUBSCRIBED
+  | UNSUBSCRIBE
+  | UNSUBSCRIBED
+  | EVENT [@@deriving enum]
+
+type hello_t = { realm: Uri.t; details: Dict.t } [@@deriving create]
+type welcome_t = { id: int; details: Dict.t } [@@deriving create]
+type details_reason_t = { details: Dict.t; reason: Uri.t } [@@deriving create]
+type goodbye_t = { details: Dict.t; reason: Uri.t } [@@deriving create]
+type error_t = { reqtype: int; reqid: int; details: Dict.t; error: Uri.t; args: WList.t; kwArgs: Dict.t } [@@deriving create]
+type publish_t = { reqid: int; options: Dict.t; topic: Uri.t; args: WList.t; kwArgs: Dict.t } [@@deriving create]
+type ack_t = { reqid: int; id: int } [@@deriving create]
+type subscribe_t = { reqid: int; options: Dict.t; topic: Uri.t } [@@deriving create]
+type event_t = { subid: int; pubid: int; details: Dict.t; args: WList.t; kwArgs: Dict.t } [@@deriving create]
+
+type msg =
+  | Hello of hello_t
+  | Welcome of welcome_t
+  | Abort of details_reason_t
+  | Goodbye of details_reason_t
+  | Error of error_t
+  | Publish of publish_t
+  | Published of ack_t
+  | Subscribe of subscribe_t
+  | Subscribed of ack_t
+  | Unsubscribe of ack_t
+  | Unsubscribed of int
+  | Event of event_t
+
+let ok_or_failwith = function
+  | Ok v -> v
+  | Error msg -> failwith msg
+
+let remaining_args = function
+  | [`List args] -> args, []
+  | [`List args; `Assoc kwArgs] -> args, kwArgs
+  | _ -> [], []
+
+let msg_of_yojson = function
   | `List ((`Int typ) :: content) -> begin
-    match msgtype_of_enum typ with
-    | None -> invalid_arg Printf.(sprintf "msg_of_json: invalid msg type %d" typ)
-    | Some typ -> create_msg ~typ ~content ()
+      match msgtyp_of_enum typ with
+      | None -> Result.Error Printf.(sprintf "msg_of_json: invalid msg type %d" typ)
+      | Some HELLO -> begin
+          match content with
+          | [`String uri; `Assoc details] ->
+            let realm = Uri.of_string uri in
+            Ok (Hello (create_hello_t ~realm ~details ()))
+          | _ -> Result.Error "msg_of_yojson: HELLO"
+        end
+      | Some WELCOME -> begin
+          match content with
+          | [`Int id; `Assoc details] ->
+            Ok (Welcome (create_welcome_t ~id ~details ()))
+          | _ -> Result.Error "msg_of_yojson: WELCOME"
+        end
+      | Some ABORT -> begin
+          match content with
+          | [`Assoc details; `String reason] ->
+            let reason = Uri.of_string reason in
+            Ok (Abort (create_details_reason_t ~details ~reason ()))
+          | _ -> Result.Error "msg_of_yojson: ABORT"
+        end
+      | Some GOODBYE -> begin
+          match content with
+          | [`Assoc details; `String reason] ->
+            let reason = Uri.of_string reason in
+            Ok (Goodbye (create_details_reason_t ~details ~reason ()))
+          | _ -> Result.Error "msg_of_yojson: GOODBYE"
+        end
+      | Some ERROR -> begin
+          match content with
+          | `Int reqtype :: `Int reqid :: `Assoc details :: `String uri :: tl ->
+            let uri = Uri.of_string uri in
+            let args, kwArgs = remaining_args tl in
+            Ok (Error (create_error_t reqtype reqid details uri args kwArgs ()))
+          | _ -> Result.Error "msg_of_yojson: ERROR"
+        end
+      | Some PUBLISH -> begin
+          match content with
+          | `Int reqid :: `Assoc options :: `String topic :: tl ->
+            let topic = Uri.of_string topic in
+            let args, kwArgs = remaining_args tl in
+            Ok (Publish (create_publish_t reqid options topic args kwArgs ()))
+          | _ -> Result.Error "msg_of_yojson: PUBLISH"
+        end
+      | Some PUBLISHED -> begin
+          match content with
+          | [`Int reqid; `Int id] -> Ok (Published (create_ack_t ~reqid ~id ()))
+          | _ -> Result.Error "msg_of_yojson: PUBLISHED"
+        end
+      | Some SUBSCRIBE -> begin
+          match content with
+          | [`Int reqid; `Assoc options; `String topic] ->
+            let topic = Uri.of_string topic in
+            Ok (Subscribe (create_subscribe_t reqid options topic ()))
+          | _ -> Result.Error "msg_of_yojson: PUBLISH"
+        end
+      | Some SUBSCRIBED -> begin
+          match content with
+          | [`Int reqid; `Int id] -> Ok (Subscribed (create_ack_t ~reqid ~id ()))
+          | _ -> Result.Error "msg_of_yojson: SUBSCRIBED"
+        end
+      | Some UNSUBSCRIBE -> begin
+          match content with
+          | [`Int reqid; `Int id] -> Ok (Unsubscribe (create_ack_t ~reqid ~id ()))
+          | _ -> Result.Error "msg_of_yojson: UNSUBSCRIBE"
+        end
+      | Some UNSUBSCRIBED -> begin
+          match content with
+          | [`Int reqid] -> Ok (Unsubscribed reqid)
+          | _ -> Result.Error "msg_of_yojson: UNSUBSCRIBED"
+        end
+      | Some EVENT -> begin
+          match content with
+          | `Int subid :: `Int pubid :: `Assoc details :: tl ->
+            let args, kwArgs = remaining_args tl in
+            Ok (Event (create_event_t subid pubid details args kwArgs ()))
+          | _ -> Result.Error "msg_of_yojson: EVENT"
+        end
     end
-  | #Yojson.Safe.json as json ->
-    invalid_arg Yojson.Safe.(to_string json)
+  | #Yojson.Safe.json as json -> Result.Error Yojson.Safe.(to_string json)
 
-let json_of_msg { typ; content } = `List (`Int (msgtype_to_enum typ) :: content)
+let msg_to_yojson = function
+  | Hello { realm; details } ->
+    `List [`Int (msgtyp_to_enum HELLO); `String (Uri.to_string realm); `Assoc details]
+  | Welcome { id; details } ->
+    `List [`Int (msgtyp_to_enum WELCOME); `Int id; `Assoc details ]
+  | Abort { details; reason } ->
+    `List [`Int (msgtyp_to_enum ABORT); `Assoc details; `String (Uri.to_string reason) ]
+  | Goodbye { details; reason } ->
+    `List [`Int (msgtyp_to_enum GOODBYE); `Assoc details; `String (Uri.to_string reason) ]
+  | Error { reqtype; reqid; details; error; args; kwArgs } ->
+    `List [`Int (msgtyp_to_enum ERROR); `Int reqtype; `Int reqid; `Assoc details; `String (Uri.to_string error); `List args; `Assoc kwArgs]
+  | Publish { reqid; options; topic; args; kwArgs } ->
+    `List [`Int (msgtyp_to_enum PUBLISH); `Int reqid; `Assoc options; `String (Uri.to_string topic); `List args; `Assoc kwArgs]
+  | Published { reqid; id } ->
+    `List [`Int (msgtyp_to_enum PUBLISHED); `Int reqid; `Int id]
+  | Subscribe { reqid; options; topic } ->
+    `List [`Int (msgtyp_to_enum SUBSCRIBE); `Int reqid; `Assoc options; `String (Uri.to_string topic)]
+  | Subscribed { reqid; id } ->
+    `List [`Int (msgtyp_to_enum SUBSCRIBED); `Int reqid; `Int id]
+  | Unsubscribe { reqid; id } ->
+    `List [`Int (msgtyp_to_enum UNSUBSCRIBE); `Int reqid; `Int id]
+  | Unsubscribed reqid ->
+    `List [`Int (msgtyp_to_enum UNSUBSCRIBED); `Int reqid]
+  | Event { subid; pubid; details; args; kwArgs } ->
+    `List [`Int (msgtyp_to_enum EVENT); `Int subid; `Int pubid; `Assoc details; `List args; `Assoc kwArgs]
 
 type role =
   | Subscriber
@@ -75,43 +192,9 @@ let show_role = function
   | Subscriber -> "subscriber"
   | Publisher -> "publisher"
 
-let hello ?(roles=[Subscriber]) ~realm () =
+let hello realm roles =
   let roles = ListLabels.map roles ~f:(fun r -> show_role r, `Assoc []) in
-  create_msg ~typ:Hello ~content:[`String realm; `Assoc ["roles", `Assoc roles]] ()
+  Hello (create_hello_t ~realm ~details:["roles", `Assoc roles] ())
 
-let subscribe ?(id=Random.bits ()) ?(options=`Assoc []) ~topic () =
-  id, create_msg ~typ:Subscribe ~content:[`Int id; options; `String topic] ()
-
-let subscribed_of_msg ?request_id { typ; content } = match typ with
-  | Subscribed -> begin match content with
-      | [`Int req_id; `Int sub_id] -> begin
-          match request_id with
-          | None -> sub_id
-          | Some req_id' ->
-            if req_id = req_id' then sub_id
-            else failwith "subscribed_of_msg: request id mismatch"
-        end
-      | _ -> invalid_arg "subscribed_of_msg: wrong content"
-    end
-  | _ -> invalid_arg "subscribed_of_msg: wrong msg type"
-
-type event = {
-  sub_id: int;
-  pub_id: int;
-  details: (string * Yojson.Safe.json) list;
-  args: Yojson.Safe.json list [@default []];
-  argsKw: (string * Yojson.Safe.json) list [@default []];
-} [@@deriving create]
-
-let event_of_msg { typ; content } = match typ with
-  | Event -> begin match content with
-      | [ `Int sub_id; `Int pub_id; `Assoc details ] ->
-        create_event ~sub_id ~pub_id ~details ()
-      | [ `Int sub_id; `Int pub_id; `Assoc details; `List args ] ->
-        create_event ~sub_id ~pub_id ~details ~args ()
-      | [ `Int sub_id; `Int pub_id; `Assoc details; `List args; `Assoc argsKw ] ->
-        create_event ~sub_id ~pub_id ~details ~args ~argsKw ()
-      | _ ->
-        invalid_arg Printf.(sprintf "event_of_msg: wrong content %s" Yojson.Safe.(to_string (`List content)))
-    end
-  | _ -> invalid_arg "event_of_msg: wrong msg type"
+let subscribe ?(reqid=Random.bits ()) ?(options=[]) topic =
+  reqid, Subscribe (create_subscribe_t reqid options topic ())
