@@ -1,3 +1,5 @@
+open Result
+
 module Uri = struct
   include Uri
   let of_yojson = function
@@ -83,27 +85,27 @@ let msg_of_yojson = function
           | [`String uri; `Assoc details] ->
             let realm = Uri.of_string uri in
             Ok (Hello (create_hello_t ~realm ~details ()))
-          | _ -> Result.Error "msg_of_yojson: HELLO"
+          | _ -> Error "msg_of_yojson: HELLO"
         end
       | Some WELCOME -> begin
           match content with
           | [`Int id; `Assoc details] ->
             Ok (Welcome (create_welcome_t ~id ~details ()))
-          | _ -> Result.Error "msg_of_yojson: WELCOME"
+          | _ -> Error "msg_of_yojson: WELCOME"
         end
       | Some ABORT -> begin
           match content with
           | [`Assoc details; `String reason] ->
             let reason = Uri.of_string reason in
             Ok (Abort (create_details_reason_t ~details ~reason ()))
-          | _ -> Result.Error "msg_of_yojson: ABORT"
+          | _ -> Error "msg_of_yojson: ABORT"
         end
       | Some GOODBYE -> begin
           match content with
           | [`Assoc details; `String reason] ->
             let reason = Uri.of_string reason in
             Ok (Goodbye (create_details_reason_t ~details ~reason ()))
-          | _ -> Result.Error "msg_of_yojson: GOODBYE"
+          | _ -> Error "msg_of_yojson: GOODBYE"
         end
       | Some ERROR -> begin
           match content with
@@ -111,7 +113,7 @@ let msg_of_yojson = function
             let uri = Uri.of_string uri in
             let args, kwArgs = remaining_args tl in
             Ok (Error (create_error_t reqtype reqid details uri args kwArgs ()))
-          | _ -> Result.Error "msg_of_yojson: ERROR"
+          | _ -> Error "msg_of_yojson: ERROR"
         end
       | Some PUBLISH -> begin
           match content with
@@ -119,44 +121,44 @@ let msg_of_yojson = function
             let topic = Uri.of_string topic in
             let args, kwArgs = remaining_args tl in
             Ok (Publish (create_publish_t reqid options topic args kwArgs ()))
-          | _ -> Result.Error "msg_of_yojson: PUBLISH"
+          | _ -> Error "msg_of_yojson: PUBLISH"
         end
       | Some PUBLISHED -> begin
           match content with
           | [`Int reqid; `Int id] -> Ok (Published (create_ack_t ~reqid ~id ()))
-          | _ -> Result.Error "msg_of_yojson: PUBLISHED"
+          | _ -> Error "msg_of_yojson: PUBLISHED"
         end
       | Some SUBSCRIBE -> begin
           match content with
           | [`Int reqid; `Assoc options; `String topic] ->
             let topic = Uri.of_string topic in
             Ok (Subscribe (create_subscribe_t reqid options topic ()))
-          | _ -> Result.Error "msg_of_yojson: PUBLISH"
+          | _ -> Error "msg_of_yojson: PUBLISH"
         end
       | Some SUBSCRIBED -> begin
           match content with
           | [`Int reqid; `Int id] -> Ok (Subscribed (create_ack_t ~reqid ~id ()))
-          | _ -> Result.Error "msg_of_yojson: SUBSCRIBED"
+          | _ -> Error "msg_of_yojson: SUBSCRIBED"
         end
       | Some UNSUBSCRIBE -> begin
           match content with
           | [`Int reqid; `Int id] -> Ok (Unsubscribe (create_ack_t ~reqid ~id ()))
-          | _ -> Result.Error "msg_of_yojson: UNSUBSCRIBE"
+          | _ -> Error "msg_of_yojson: UNSUBSCRIBE"
         end
       | Some UNSUBSCRIBED -> begin
           match content with
           | [`Int reqid] -> Ok (Unsubscribed reqid)
-          | _ -> Result.Error "msg_of_yojson: UNSUBSCRIBED"
+          | _ -> Error "msg_of_yojson: UNSUBSCRIBED"
         end
       | Some EVENT -> begin
           match content with
           | `Int subid :: `Int pubid :: `Assoc details :: tl ->
             let args, kwArgs = remaining_args tl in
             Ok (Event (create_event_t subid pubid details args kwArgs ()))
-          | _ -> Result.Error "msg_of_yojson: EVENT"
+          | _ -> Error "msg_of_yojson: EVENT"
         end
     end
-  | #Yojson.Safe.json as json -> Result.Error Yojson.Safe.(to_string json)
+  | #Yojson.Safe.json as json -> Error Yojson.Safe.(to_string json)
 
 let msg_to_yojson = function
   | Hello { realm; details } ->
