@@ -21,5 +21,3 @@ depends: [
   "ppx_deriving_yojson"
   "uri"
 ]
-
-
