@@ -17,6 +17,7 @@ build: [
   ]
 ]
 depends: [
+  "result"
   "ppx_deriving"
   "ppx_deriving_yojson"
   "uri"
