@@ -15,6 +15,7 @@ depends: [
   "result"
   "uri"
   "ppx_deriving"
+  "sexplib"
 ]
 depopts: [
   "yojson"

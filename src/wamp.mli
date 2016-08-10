@@ -49,6 +49,7 @@ type 'a msg =
   | Unsubscribe of ack
   | Unsubscribed of int
   | Event of 'a event
+        [@@deriving sexp]
 
 type role = Subscriber | Publisher
 val show_role : role -> string

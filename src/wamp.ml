@@ -3,7 +3,7 @@
    Distributed under the ISC license, see terms at the end of the file.
    %%NAME%% %%VERSION%%
   ---------------------------------------------------------------------------*)
-
+open Sexplib.Std
 open Result
 
 type msgtyp =
@@ -20,17 +20,17 @@ type msgtyp =
   | UNSUBSCRIBED
   | EVENT [@@deriving enum]
 
-type 'a dict = (string * 'a) list
+type 'a dict = (string * 'a) list [@@deriving sexp]
 
-type 'a hello = { realm: Uri.t; details: 'a dict } [@@deriving create]
-type 'a welcome = { id: int; details: 'a dict } [@@deriving create]
-type 'a details_reason = { details: 'a dict; reason: Uri.t } [@@deriving create]
-type 'a goodbye = { details: 'a dict; reason: Uri.t } [@@deriving create]
-type 'a error = { reqtype: int; reqid: int; details: 'a dict; error: Uri.t; args: 'a list; kwArgs: 'a dict } [@@deriving create]
-type 'a publish = { reqid: int; options: 'a dict; topic: Uri.t; args: 'a list; kwArgs: 'a dict } [@@deriving create]
-type ack = { reqid: int; id: int } [@@deriving create]
-type 'a subscribe = { reqid: int; options: 'a dict; topic: Uri.t } [@@deriving create]
-type 'a event = { subid: int; pubid: int; details: 'a dict; args: 'a list; kwArgs: 'a dict } [@@deriving create]
+type 'a hello = { realm: Uri.t; details: 'a dict } [@@deriving create, sexp]
+type 'a welcome = { id: int; details: 'a dict } [@@deriving create, sexp]
+type 'a details_reason = { details: 'a dict; reason: Uri.t } [@@deriving create, sexp]
+type 'a goodbye = { details: 'a dict; reason: Uri.t } [@@deriving create, sexp]
+type 'a error = { reqtype: int; reqid: int; details: 'a dict; error: Uri.t; args: 'a list; kwArgs: 'a dict } [@@deriving create, sexp]
+type 'a publish = { reqid: int; options: 'a dict; topic: Uri.t; args: 'a list; kwArgs: 'a dict } [@@deriving create, sexp]
+type ack = { reqid: int; id: int } [@@deriving create, sexp]
+type 'a subscribe = { reqid: int; options: 'a dict; topic: Uri.t } [@@deriving create, sexp]
+type 'a event = { subid: int; pubid: int; details: 'a dict; args: 'a list; kwArgs: 'a dict } [@@deriving create, sexp]
 
 type 'a msg =
   | Hello of 'a hello
@@ -45,6 +45,7 @@ type 'a msg =
   | Unsubscribe of ack
   | Unsubscribed of int
   | Event of 'a event
+[@@deriving sexp]
 
 let ok_or_failwith = function
   | Ok v -> v

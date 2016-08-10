@@ -1,6 +1,6 @@
 description = "wamp-proto.org implementation in OCaml"
 version = "%%VERSION%%"
-requires = "uri ppx_deriving.std"
+requires = "uri sexplib"
 archive(byte) = "wamp.cma"
 archive(native) = "wamp.cmxa"
 plugin(byte) = "wamp.cma"
