@@ -1,7 +1,17 @@
 description = "wamp-proto.org implementation in OCaml"
 version = "%%VERSION%%"
-requires = "uri ppx_deriving.std ppx_deriving_yojson"
+requires = "uri ppx_deriving.std"
 archive(byte) = "wamp.cma"
 archive(native) = "wamp.cmxa"
 plugin(byte) = "wamp.cma"
 plugin(native) = "wamp.cmxs"
+package "yojson" (
+  version = "%%VERSION%%"
+  description = "wamp-proto.org implementation in OCaml: JSON serialization"
+  requires = "wamp yojson"
+  archive(byte) = "wamp_yojson.cma"
+  archive(native) = "wamp_yojson.cmxa"
+  plugin(byte) = "wamp_yojson.cma"
+  plugin(native) = "wamp_yojson.cmxs"
+  exists_if = "wamp_yojson.cma"
+)

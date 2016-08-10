@@ -12,10 +12,13 @@ depends: [
   "ocamlfind" {build}
   "ocamlbuild" {build}
   "topkg" {build}
+  "result"
   "uri"
-  "ppx_deriving_yojson"
+  "ppx_deriving"
 ]
-depopts: []
+depopts: [
+  "yojson"
+]
 build:
 [[ "ocaml" "pkg/pkg.ml" "build"
            "--pinned" "%{pinned}%" ]]

@@ -10,38 +10,48 @@
 
 (** {1 Wamp} *)
 
-module WList : sig type t = Yojson.Safe.json list end
-module Dict : sig type t = (string * Yojson.Safe.json) list end
+type msgtyp =
+  | HELLO [@value 1]
+  | WELCOME
+  | ABORT
+  | GOODBYE [@value 6]
+  | ERROR [@value 8]
+  | PUBLISH [@value 16]
+  | PUBLISHED
+  | SUBSCRIBE [@value 32]
+  | SUBSCRIBED
+  | UNSUBSCRIBE
+  | UNSUBSCRIBED
+  | EVENT [@@deriving enum]
 
-type hello_t = { realm: Uri.t; details: Dict.t }
-type welcome_t = { id: int; details: Dict.t }
-type details_reason_t = { details: Dict.t; reason: Uri.t }
-type goodbye_t = { details: Dict.t; reason: Uri.t }
-type error_t = { reqtype: int; reqid: int; details: Dict.t; error: Uri.t; args: WList.t; kwArgs: Dict.t }
-type publish_t = { reqid: int; options: Dict.t; topic: Uri.t; args: WList.t; kwArgs: Dict.t }
-type ack_t = { reqid: int; id: int }
-type subscribe_t = { reqid: int; options: Dict.t; topic: Uri.t }
-type event_t = { subid: int; pubid: int; details: Dict.t; args: WList.t; kwArgs: Dict.t }
+type 'a dict = (string * 'a) list
 
-type msg =
-  | Hello of hello_t
-  | Welcome of welcome_t
-  | Abort of details_reason_t
-  | Goodbye of details_reason_t
-  | Error of error_t
-  | Publish of publish_t
-  | Published of ack_t
-  | Subscribe of subscribe_t
-  | Subscribed of ack_t
-  | Unsubscribe of ack_t
+type 'a hello = { realm: Uri.t; details: 'a dict } [@@deriving create]
+type 'a welcome = { id: int; details: 'a dict } [@@deriving create]
+type 'a details_reason = { details: 'a dict; reason: Uri.t } [@@deriving create]
+type 'a goodbye = { details: 'a dict; reason: Uri.t } [@@deriving create]
+type 'a error = { reqtype: int; reqid: int; details: 'a dict; error: Uri.t; args: 'a list; kwArgs: 'a dict } [@@deriving create]
+type 'a publish = { reqid: int; options: 'a dict; topic: Uri.t; args: 'a list; kwArgs: 'a dict } [@@deriving create]
+type ack = { reqid: int; id: int } [@@deriving create]
+type 'a subscribe = { reqid: int; options: 'a dict; topic: Uri.t } [@@deriving create]
+type 'a event = { subid: int; pubid: int; details: 'a dict; args: 'a list; kwArgs: 'a dict } [@@deriving create]
+
+type 'a msg =
+  | Hello of 'a hello
+  | Welcome of 'a welcome
+  | Abort of 'a details_reason
+  | Goodbye of 'a details_reason
+  | Error of 'a error
+  | Publish of 'a publish
+  | Published of ack
+  | Subscribe of 'a subscribe
+  | Subscribed of ack
+  | Unsubscribe of ack
   | Unsubscribed of int
-  | Event of event_t
-[@@deriving yojson]
+  | Event of 'a event
 
 type role = Subscriber | Publisher
-
-val hello: Uri.t -> role list -> msg
-val subscribe: ?reqid:int -> ?options:Dict.t -> Uri.t -> int * msg
+val show_role : role -> string
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2016 Vincent Bernardoff

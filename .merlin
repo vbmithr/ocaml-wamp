@@ -1,7 +1,9 @@
 PKG bytes
 PKG uri
 PKG ppx_deriving.std
-PKG ppx_deriving_yojson
+PKG yojson
+PKG topkg
+PKG result
 S src
 S test
 B _build/**

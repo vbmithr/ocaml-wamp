@@ -11,8 +11,8 @@ action ()
 {
     case $1 in
         default)    action lib-native ;;
-        lib-byte)   $OCAMLBUILD wamp.cma ;;
-        lib-native) $OCAMLBUILD wamp.cmxa ;;
+        lib-byte)   $OCAMLBUILD wamp.cma wamp_yojson.cma;;
+        lib-native) $OCAMLBUILD wamp.cmxa wamp_yojson.cmxa;;
         test|tests) $OCAMLBUILD test/tests.otarget ;;
         doc)        shift; topkg doc --dev $* ;;
         api-doc)    shift; topkg doc $* ;;
