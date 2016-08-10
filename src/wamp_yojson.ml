@@ -121,5 +121,3 @@ let hello realm roles =
 
 let subscribe ?(reqid=Random.bits ()) ?(options=[]) topic =
   reqid, Subscribe (create_subscribe reqid options topic ())
-
-

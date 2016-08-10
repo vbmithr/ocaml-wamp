@@ -15,3 +15,13 @@ package "yojson" (
   plugin(native) = "wamp_yojson.cmxs"
   exists_if = "wamp_yojson.cma"
 )
+package "msgpck" (
+  version = "%%VERSION%%"
+  description = "wamp-proto.org implementation in OCaml: MsgPack serialization"
+  requires = "wamp msgpck"
+  archive(byte) = "wamp_msgpck.cma"
+  archive(native) = "wamp_msgpck.cmxa"
+  plugin(byte) = "wamp_msgpck.cma"
+  plugin(native) = "wamp_msgpck.cmxs"
+  exists_if = "wamp_msgpck.cma"
+)

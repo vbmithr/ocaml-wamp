@@ -1,6 +1,7 @@
-true : bin_annot, safe_string, package(bytes), package(result), package(uri), package(ppx_deriving.std)
+true : bin_annot, safe_string, warn(-40), package(bytes), package(result), package(uri), package(ppx_deriving.std)
 
 <src> : include
 <test> : include
 
 <src/wamp_yojson.*>: package(yojson)
+<src/wamp_msgpck.*>: package(msgpck)

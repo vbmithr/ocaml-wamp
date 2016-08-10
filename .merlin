@@ -3,6 +3,7 @@ PKG uri
 PKG ppx_deriving.std
 PKG yojson
 PKG topkg
+PKG msgpck
 PKG result
 S src
 S test

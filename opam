@@ -18,6 +18,7 @@ depends: [
 ]
 depopts: [
   "yojson"
+  "msgpck"
 ]
 build:
 [[ "ocaml" "pkg/pkg.ml" "build"
