@@ -17,20 +17,20 @@ let msg_of_msgpck = function
         let realm = Uri.of_string uri in
         let details = dict_of_map details in
         Ok (Hello (create_hello ~realm ~details ()))
-    | _ -> Error "msg_of_yojson: HELLO"
+    | _ -> Error "msg_of_msgpck: HELLO"
     end
   | Some WELCOME -> begin match content with
     | [Int id; Map details] ->
         let details = dict_of_map details in
         Ok (Welcome (create_welcome ~id ~details ()))
-    | _ -> Error "msg_of_yojson: WELCOME"
+    | _ -> Error "msg_of_msgpck: WELCOME"
     end
   | Some ABORT -> begin match content with
     | [Map details; String reason] ->
         let reason = Uri.of_string reason in
         let details = dict_of_map details in
         Ok (Abort (create_details_reason ~details ~reason ()))
-    | _ -> Error "msg_of_yojson: ABORT"
+    | _ -> Error "msg_of_msgpck: ABORT"
     end
   | Some GOODBYE -> begin
       match content with
@@ -38,7 +38,7 @@ let msg_of_msgpck = function
           let reason = Uri.of_string reason in
           let details = dict_of_map details in
           Ok (Goodbye (create_details_reason ~details ~reason ()))
-      | _ -> Error "msg_of_yojson: GOODBYE"
+      | _ -> Error "msg_of_msgpck: GOODBYE"
     end
   | Some ERROR -> begin
       match content with
@@ -47,7 +47,7 @@ let msg_of_msgpck = function
           let details = dict_of_map details in
           let args, kwArgs = remaining_args tl in
           Ok (Error (create_error ~reqtype ~reqid ~details ~error:uri ~args ~kwArgs ()))
-      | _ -> Error "msg_of_yojson: ERROR"
+      | _ -> Error "msg_of_msgpck: ERROR"
     end
   | Some PUBLISH -> begin
       match content with
@@ -56,12 +56,12 @@ let msg_of_msgpck = function
           let options = dict_of_map options in
           let args, kwArgs = remaining_args tl in
           Ok (Publish (create_publish ~reqid ~options ~topic ~args ~kwArgs ()))
-      | _ -> Error "msg_of_yojson: PUBLISH"
+      | _ -> Error "msg_of_msgpck: PUBLISH"
     end
   | Some PUBLISHED -> begin
       match content with
       | [Int reqid; Int id] -> Ok (Published (create_ack ~reqid ~id ()))
-      | _ -> Error "msg_of_yojson: PUBLISHED"
+      | _ -> Error "msg_of_msgpck: PUBLISHED"
     end
   | Some SUBSCRIBE -> begin
       match content with
@@ -69,22 +69,22 @@ let msg_of_msgpck = function
           let topic = Uri.of_string topic in
           let options = dict_of_map options in
           Ok (Subscribe (create_subscribe reqid options topic ()))
-      | _ -> Error "msg_of_yojson: PUBLISH"
+      | _ -> Error "msg_of_msgpck: PUBLISH"
     end
   | Some SUBSCRIBED -> begin
       match content with
       | [Int reqid; Int id] -> Ok (Subscribed (create_ack ~reqid ~id ()))
-      | _ -> Error "msg_of_yojson: SUBSCRIBED"
+      | _ -> Error "msg_of_msgpck: SUBSCRIBED"
     end
   | Some UNSUBSCRIBE -> begin
       match content with
       | [Int reqid; Int id] -> Ok (Unsubscribe (create_ack ~reqid ~id ()))
-      | _ -> Error "msg_of_yojson: UNSUBSCRIBE"
+      | _ -> Error "msg_of_msgpck: UNSUBSCRIBE"
     end
   | Some UNSUBSCRIBED -> begin
       match content with
       | [Int reqid] -> Ok (Unsubscribed reqid)
-      | _ -> Error "msg_of_yojson: UNSUBSCRIBED"
+      | _ -> Error "msg_of_msgpck: UNSUBSCRIBED"
     end
   | Some EVENT -> begin
       match content with
@@ -92,7 +92,7 @@ let msg_of_msgpck = function
           let details = dict_of_map details in
           let args, kwArgs = remaining_args tl in
           Ok (Event (create_event ~subid ~pubid ~details ~args ~kwArgs ()))
-      | _ -> Error "msg_of_yojson: EVENT"
+      | _ -> Error "msg_of_msgpck: EVENT"
     end
   end
 | msg -> Error (msg |> Msgpck.sexp_of_t |> Sexplib.Sexp.to_string)
