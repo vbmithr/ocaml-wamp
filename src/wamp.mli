@@ -52,7 +52,7 @@ type 'a msg =
         [@@deriving sexp]
 
 type role = Subscriber | Publisher
-val show_role : role -> string
+val string_of_role : role -> string
 
 (*---------------------------------------------------------------------------
    Copyright (c) 2016 Vincent Bernardoff

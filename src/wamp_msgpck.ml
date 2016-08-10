@@ -135,7 +135,7 @@ let msg_to_msgpck = function
     List [Int (msgtyp_to_enum EVENT); Int subid; Int pubid; Map details; List args; Map kwArgs]
 
 let hello realm roles =
-  let roles = ListLabels.map roles ~f:M.(fun r -> String (show_role r), Map []) in
+  let roles = ListLabels.map roles ~f:M.(fun r -> String (string_of_role r), Map []) in
   Hello (create_hello ~realm ~details:["roles", M.Map roles] ())
 
 let subscribe ?(reqid=Random.bits ()) ?(options=[]) topic =

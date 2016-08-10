@@ -55,7 +55,7 @@ type role =
   | Subscriber
   | Publisher
 
-let show_role = function
+let string_of_role = function
   | Subscriber -> "subscriber"
   | Publisher -> "publisher"
 (*---------------------------------------------------------------------------

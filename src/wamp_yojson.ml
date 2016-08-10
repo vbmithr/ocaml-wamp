@@ -116,7 +116,7 @@ let msg_to_yojson = function
     `List [`Int (msgtyp_to_enum EVENT); `Int subid; `Int pubid; `Assoc details; `List args; `Assoc kwArgs]
 
 let hello realm roles =
-  let roles = ListLabels.map roles ~f:(fun r -> show_role r, `Assoc []) in
+  let roles = ListLabels.map roles ~f:(fun r -> string_of_role r, `Assoc []) in
   Hello (create_hello ~realm ~details:["roles", `Assoc roles] ())
 
 let subscribe ?(reqid=Random.bits ()) ?(options=[]) topic =
