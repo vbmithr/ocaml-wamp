@@ -23,4 +23,7 @@ depopts: [
 ]
 build:
 [[ "ocaml" "pkg/pkg.ml" "build"
-           "--pinned" "%{pinned}%" ]]
+           "--pinned" "%{pinned}%"
+           "--with-yojson" "%{yojson:installed}%"
+           "--with-msgpck" "%{msgpck:installed}%"
+]]
