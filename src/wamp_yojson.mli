@@ -1,6 +1,6 @@
 open Wamp
 
-val msg_of_yojson : Yojson.Safe.json -> (Yojson.Safe.json msg, string) result
+val msg_of_yojson : Yojson.Safe.json -> (Yojson.Safe.json msg, string) Result.result
 val msg_to_yojson : Yojson.Safe.json msg -> Yojson.Safe.json
 
 val hello : Uri.t -> role list -> Yojson.Safe.json msg
