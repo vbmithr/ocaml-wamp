@@ -13,27 +13,27 @@ let msg_of_yojson = function
           match content with
           | [`String uri; `Assoc details] ->
             let realm = Uri.of_string uri in
-            Ok (Hello (create_hello ~realm ~details ()))
+            Ok (hello ~realm ~details)
           | _ -> Error "msg_of_yojson: HELLO"
         end
       | Some WELCOME -> begin
           match content with
           | [`Int id; `Assoc details] ->
-            Ok (Welcome (create_welcome ~id ~details ()))
+            Ok (welcome ~id ~details)
           | _ -> Error "msg_of_yojson: WELCOME"
         end
       | Some ABORT -> begin
           match content with
           | [`Assoc details; `String reason] ->
             let reason = Uri.of_string reason in
-            Ok (Abort (create_details_reason ~details ~reason ()))
+            Ok (abort ~details ~reason)
           | _ -> Error "msg_of_yojson: ABORT"
         end
       | Some GOODBYE -> begin
           match content with
           | [`Assoc details; `String reason] ->
             let reason = Uri.of_string reason in
-            Ok (Goodbye (create_details_reason ~details ~reason ()))
+            Ok (goodbye ~details ~reason)
           | _ -> Error "msg_of_yojson: GOODBYE"
         end
       | Some ERROR -> begin
@@ -41,7 +41,7 @@ let msg_of_yojson = function
           | `Int reqtype :: `Int reqid :: `Assoc details :: `String uri :: tl ->
             let uri = Uri.of_string uri in
             let args, kwArgs = remaining_args tl in
-            Ok (Error (create_error ~reqtype ~reqid ~details ~error:uri ~args ~kwArgs ()))
+            Ok (error ~reqtype ~reqid ~details ~error:uri ~args ~kwArgs)
           | _ -> Error "msg_of_yojson: ERROR"
         end
       | Some PUBLISH -> begin
@@ -49,41 +49,44 @@ let msg_of_yojson = function
           | `Int reqid :: `Assoc options :: `String topic :: tl ->
             let topic = Uri.of_string topic in
             let args, kwArgs = remaining_args tl in
-            Ok (Publish (create_publish ~reqid ~options ~topic ~args ~kwArgs ()))
+            Ok (publish ~reqid ~options ~topic ~args ~kwArgs)
           | _ -> Error "msg_of_yojson: PUBLISH"
         end
       | Some PUBLISHED -> begin
           match content with
-          | [`Int reqid; `Int id] -> Ok (Published (create_ack ~reqid ~id ()))
+          | [`Int reqid; `Int id] ->
+              Ok (published ~reqid ~id)
           | _ -> Error "msg_of_yojson: PUBLISHED"
         end
       | Some SUBSCRIBE -> begin
           match content with
           | [`Int reqid; `Assoc options; `String topic] ->
             let topic = Uri.of_string topic in
-            Ok (Subscribe (create_subscribe reqid options topic ()))
+            Ok (subscribe reqid options topic)
           | _ -> Error "msg_of_yojson: PUBLISH"
         end
       | Some SUBSCRIBED -> begin
           match content with
-          | [`Int reqid; `Int id] -> Ok (Subscribed (create_ack ~reqid ~id ()))
+          | [`Int reqid; `Int id] ->
+              Ok (subscribed ~reqid ~id)
           | _ -> Error "msg_of_yojson: SUBSCRIBED"
         end
       | Some UNSUBSCRIBE -> begin
           match content with
-          | [`Int reqid; `Int id] -> Ok (Unsubscribe (create_ack ~reqid ~id ()))
+          | [`Int reqid; `Int id] ->
+              Ok (unsubscribe ~reqid ~id)
           | _ -> Error "msg_of_yojson: UNSUBSCRIBE"
         end
       | Some UNSUBSCRIBED -> begin
           match content with
-          | [`Int reqid] -> Ok (Unsubscribed reqid)
+          | [`Int reqid] -> Ok (unsubscribed reqid)
           | _ -> Error "msg_of_yojson: UNSUBSCRIBED"
         end
       | Some EVENT -> begin
           match content with
           | `Int subid :: `Int pubid :: `Assoc details :: tl ->
             let args, kwArgs = remaining_args tl in
-            Ok (Event (create_event ~subid ~pubid ~details ~args ~kwArgs ()))
+            Ok (event ~subid ~pubid ~details ~args ~kwArgs)
           | _ -> Error "msg_of_yojson: EVENT"
         end
     end
@@ -117,7 +120,7 @@ let msg_to_yojson = function
 
 let hello realm roles =
   let roles = ListLabels.map roles ~f:(fun r -> string_of_role r, `Assoc []) in
-  Hello (create_hello ~realm ~details:["roles", `Assoc roles] ())
+  hello ~realm ~details:["roles", `Assoc roles]
 
 let subscribe ?(reqid=Random.bits ()) ?(options=[]) topic =
-  reqid, Subscribe (create_subscribe reqid options topic ())
+  reqid, (subscribe reqid options topic)

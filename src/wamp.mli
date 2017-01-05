@@ -22,19 +22,25 @@ type msgtyp =
   | SUBSCRIBED
   | UNSUBSCRIBE
   | UNSUBSCRIBED
-  | EVENT [@@deriving enum]
+  | EVENT
+
+val msgtyp_of_enum : int -> msgtyp option
+val msgtyp_to_enum : msgtyp -> int
 
 type 'a dict = (string * 'a) list
 
-type 'a hello = { realm: Uri.t; details: 'a dict } [@@deriving create]
-type 'a welcome = { id: int; details: 'a dict } [@@deriving create]
-type 'a details_reason = { details: 'a dict; reason: Uri.t } [@@deriving create]
-type 'a goodbye = { details: 'a dict; reason: Uri.t } [@@deriving create]
-type 'a error = { reqtype: int; reqid: int; details: 'a dict; error: Uri.t; args: 'a list; kwArgs: 'a dict } [@@deriving create]
-type 'a publish = { reqid: int; options: 'a dict; topic: Uri.t; args: 'a list; kwArgs: 'a dict } [@@deriving create]
-type ack = { reqid: int; id: int } [@@deriving create]
-type 'a subscribe = { reqid: int; options: 'a dict; topic: Uri.t } [@@deriving create]
-type 'a event = { subid: int; pubid: int; details: 'a dict; args: 'a list; kwArgs: 'a dict } [@@deriving create]
+type 'a hello = { realm: Uri.t; details: 'a dict }
+type 'a welcome = { id: int; details: 'a dict }
+type 'a details_reason = { details: 'a dict; reason: Uri.t }
+type 'a goodbye = { details: 'a dict; reason: Uri.t }
+type 'a error = { reqtype: int; reqid: int; details: 'a dict;
+                  error: Uri.t; args: 'a list; kwArgs: 'a dict }
+type 'a publish = { reqid: int; options: 'a dict; topic: Uri.t;
+                    args: 'a list; kwArgs: 'a dict }
+type ack = { reqid: int; id: int }
+type 'a subscribe = { reqid: int; options: 'a dict; topic: Uri.t }
+type 'a event = { subid: int; pubid: int; details: 'a dict;
+                  args: 'a list; kwArgs: 'a dict }
 
 type 'a msg =
   | Hello of 'a hello
@@ -49,7 +55,25 @@ type 'a msg =
   | Unsubscribe of ack
   | Unsubscribed of int
   | Event of 'a event
-        [@@deriving sexp]
+
+val hello : realm:Uri.t -> details:'a dict -> 'a msg
+val welcome : id:int -> details:'a dict -> 'a msg
+val abort : details:'a dict -> reason:Uri.t -> 'a msg
+val goodbye : details:'a dict -> reason:Uri.t -> 'a msg
+val error :
+  reqtype:int -> reqid:int -> details:'a dict ->
+  error:Uri.t -> args:'a list -> kwArgs:'a dict -> 'a msg
+val publish :
+  reqid:int -> options:'a dict -> topic:Uri.t ->
+  args:'a list -> kwArgs:'a dict -> 'a msg
+val published : reqid:int -> id:int -> 'a msg
+val subscribe : reqid:int -> options:'a dict -> topic:Uri.t -> 'a msg
+val subscribed : reqid:int -> id:int -> 'a msg
+val unsubscribe : reqid:int -> id:int -> 'a msg
+val unsubscribed : reqid:int -> 'a msg
+val event :
+  subid:int -> pubid:int -> details:'a dict ->
+  args:'a list -> kwArgs:'a dict -> 'a msg
 
 type role = Subscriber | Publisher
 val string_of_role : role -> string

@@ -3,7 +3,7 @@
    Distributed under the ISC license, see terms at the end of the file.
    %%NAME%% %%VERSION%%
   ---------------------------------------------------------------------------*)
-open Sexplib.Std
+
 open Result
 
 type msgtyp =
@@ -18,19 +18,48 @@ type msgtyp =
   | SUBSCRIBED
   | UNSUBSCRIBE
   | UNSUBSCRIBED
-  | EVENT [@@deriving enum]
+  | EVENT
 
-type 'a dict = (string * 'a) list [@@deriving sexp]
+let msgtyp_of_enum = function
+| 1 -> Some HELLO
+| 2 -> Some WELCOME
+| 3 -> Some ABORT
+| 6 -> Some GOODBYE
+| 8 -> Some ERROR
+| 16 -> Some PUBLISH
+| 17 -> Some PUBLISHED
+| 32 -> Some SUBSCRIBE
+| 33 -> Some SUBSCRIBED
+| 34 -> Some UNSUBSCRIBE
+| 35 -> Some UNSUBSCRIBED
+| 36 -> Some EVENT
+| _ -> None
 
-type 'a hello = { realm: Uri.t; details: 'a dict } [@@deriving create, sexp]
-type 'a welcome = { id: int; details: 'a dict } [@@deriving create, sexp]
-type 'a details_reason = { details: 'a dict; reason: Uri.t } [@@deriving create, sexp]
-type 'a goodbye = { details: 'a dict; reason: Uri.t } [@@deriving create, sexp]
-type 'a error = { reqtype: int; reqid: int; details: 'a dict; error: Uri.t; args: 'a list; kwArgs: 'a dict } [@@deriving create, sexp]
-type 'a publish = { reqid: int; options: 'a dict; topic: Uri.t; args: 'a list; kwArgs: 'a dict } [@@deriving create, sexp]
-type ack = { reqid: int; id: int } [@@deriving create, sexp]
-type 'a subscribe = { reqid: int; options: 'a dict; topic: Uri.t } [@@deriving create, sexp]
-type 'a event = { subid: int; pubid: int; details: 'a dict; args: 'a list; kwArgs: 'a dict } [@@deriving create, sexp]
+let msgtyp_to_enum = function
+| HELLO -> 1
+| WELCOME -> 2
+| ABORT -> 3
+| GOODBYE -> 6
+| ERROR -> 8
+| PUBLISH -> 16
+| PUBLISHED -> 17
+| SUBSCRIBE -> 32
+| SUBSCRIBED -> 33
+| UNSUBSCRIBE -> 34
+| UNSUBSCRIBED -> 35
+| EVENT -> 36
+
+type 'a dict = (string * 'a) list
+
+type 'a hello = { realm: Uri.t; details: 'a dict }
+type 'a welcome = { id: int; details: 'a dict }
+type 'a details_reason = { details: 'a dict; reason: Uri.t }
+type 'a goodbye = { details: 'a dict; reason: Uri.t }
+type 'a error = { reqtype: int; reqid: int; details: 'a dict; error: Uri.t; args: 'a list; kwArgs: 'a dict }
+type 'a publish = { reqid: int; options: 'a dict; topic: Uri.t; args: 'a list; kwArgs: 'a dict }
+type ack = { reqid: int; id: int }
+type 'a subscribe = { reqid: int; options: 'a dict; topic: Uri.t }
+type 'a event = { subid: int; pubid: int; details: 'a dict; args: 'a list; kwArgs: 'a dict }
 
 type 'a msg =
   | Hello of 'a hello
@@ -45,7 +74,22 @@ type 'a msg =
   | Unsubscribe of ack
   | Unsubscribed of int
   | Event of 'a event
-[@@deriving sexp]
+
+let hello ~realm ~details = Hello { realm ; details }
+let welcome ~id ~details = Welcome { id ; details }
+let abort ~details ~reason = Abort { details ; reason }
+let goodbye ~details ~reason = Goodbye { details ; reason }
+let error ~reqtype ~reqid ~details ~error ~args ~kwArgs =
+  Error { reqtype ; reqid ; details ; error ; args ; kwArgs }
+let publish ~reqid ~options ~topic ~args ~kwArgs =
+  Publish { reqid ; options ; topic ; args ; kwArgs }
+let published ~reqid ~id = Published { reqid ; id }
+let subscribe ~reqid ~options ~topic = Subscribe { reqid ; options ; topic }
+let subscribed ~reqid ~id = Subscribed { reqid ; id }
+let unsubscribe ~reqid ~id = Unsubscribe { reqid ; id }
+let unsubscribed ~reqid = Unsubscribed reqid
+let event ~subid ~pubid ~details ~args ~kwArgs =
+  Event { subid ; pubid ; details ; args ; kwArgs }
 
 let ok_or_failwith = function
   | Ok v -> v

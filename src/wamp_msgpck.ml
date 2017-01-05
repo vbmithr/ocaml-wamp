@@ -16,20 +16,20 @@ let msg_of_msgpck = function
     | [String uri; Map details] ->
         let realm = Uri.of_string uri in
         let details = dict_of_map details in
-        Ok (Hello (create_hello ~realm ~details ()))
+        Ok (hello ~realm ~details)
     | _ -> Error "msg_of_msgpck: HELLO"
     end
   | Some WELCOME -> begin match content with
     | [Int id; Map details] ->
         let details = dict_of_map details in
-        Ok (Welcome (create_welcome ~id ~details ()))
+        Ok (welcome ~id ~details)
     | _ -> Error "msg_of_msgpck: WELCOME"
     end
   | Some ABORT -> begin match content with
     | [Map details; String reason] ->
         let reason = Uri.of_string reason in
         let details = dict_of_map details in
-        Ok (Abort (create_details_reason ~details ~reason ()))
+        Ok (abort ~details ~reason)
     | _ -> Error "msg_of_msgpck: ABORT"
     end
   | Some GOODBYE -> begin
@@ -37,7 +37,7 @@ let msg_of_msgpck = function
       | [Map details; String reason] ->
           let reason = Uri.of_string reason in
           let details = dict_of_map details in
-          Ok (Goodbye (create_details_reason ~details ~reason ()))
+          Ok (goodbye ~details ~reason)
       | _ -> Error "msg_of_msgpck: GOODBYE"
     end
   | Some ERROR -> begin
@@ -46,7 +46,7 @@ let msg_of_msgpck = function
           let uri = Uri.of_string uri in
           let details = dict_of_map details in
           let args, kwArgs = remaining_args tl in
-          Ok (Error (create_error ~reqtype ~reqid ~details ~error:uri ~args ~kwArgs ()))
+          Ok (error ~reqtype ~reqid ~details ~error:uri ~args ~kwArgs)
       | _ -> Error "msg_of_msgpck: ERROR"
     end
   | Some PUBLISH -> begin
@@ -55,12 +55,13 @@ let msg_of_msgpck = function
           let topic = Uri.of_string topic in
           let options = dict_of_map options in
           let args, kwArgs = remaining_args tl in
-          Ok (Publish (create_publish ~reqid ~options ~topic ~args ~kwArgs ()))
+          Ok (publish ~reqid ~options ~topic ~args ~kwArgs)
       | _ -> Error "msg_of_msgpck: PUBLISH"
     end
   | Some PUBLISHED -> begin
       match content with
-      | [Int reqid; Int id] -> Ok (Published (create_ack ~reqid ~id ()))
+      | [Int reqid; Int id] ->
+          Ok (published ~reqid ~id)
       | _ -> Error "msg_of_msgpck: PUBLISHED"
     end
   | Some SUBSCRIBE -> begin
@@ -68,22 +69,24 @@ let msg_of_msgpck = function
       | [Int reqid; Map options; String topic] ->
           let topic = Uri.of_string topic in
           let options = dict_of_map options in
-          Ok (Subscribe (create_subscribe reqid options topic ()))
+          Ok (subscribe reqid options topic)
       | _ -> Error "msg_of_msgpck: PUBLISH"
     end
   | Some SUBSCRIBED -> begin
       match content with
-      | [Int reqid; Int id] -> Ok (Subscribed (create_ack ~reqid ~id ()))
+      | [Int reqid; Int id] ->
+          Ok (subscribed ~reqid ~id)
       | _ -> Error "msg_of_msgpck: SUBSCRIBED"
     end
   | Some UNSUBSCRIBE -> begin
       match content with
-      | [Int reqid; Int id] -> Ok (Unsubscribe (create_ack ~reqid ~id ()))
+      | [Int reqid; Int id] ->
+          Ok (unsubscribe ~reqid ~id)
       | _ -> Error "msg_of_msgpck: UNSUBSCRIBE"
     end
   | Some UNSUBSCRIBED -> begin
       match content with
-      | [Int reqid] -> Ok (Unsubscribed reqid)
+      | [Int reqid] -> Ok (unsubscribed reqid)
       | _ -> Error "msg_of_msgpck: UNSUBSCRIBED"
     end
   | Some EVENT -> begin
@@ -91,11 +94,11 @@ let msg_of_msgpck = function
       | Int subid :: Int pubid :: Map details :: tl ->
           let details = dict_of_map details in
           let args, kwArgs = remaining_args tl in
-          Ok (Event (create_event ~subid ~pubid ~details ~args ~kwArgs ()))
+          Ok (event ~subid ~pubid ~details ~args ~kwArgs)
       | _ -> Error "msg_of_msgpck: EVENT"
     end
   end
-| msg -> Error (msg |> Msgpck.sexp_of_t |> Sexplib.Sexp.to_string)
+| msg -> Error "msg_of_msgpck: msg must be a List"
 
 let msg_to_msgpck = function
 | Hello { realm; details } ->
@@ -136,7 +139,7 @@ let msg_to_msgpck = function
 
 let hello realm roles =
   let roles = ListLabels.map roles ~f:M.(fun r -> String (string_of_role r), Map []) in
-  Hello (create_hello ~realm ~details:["roles", M.Map roles] ())
+  hello ~realm ~details:["roles", M.Map roles]
 
 let subscribe ?(reqid=Random.bits ()) ?(options=[]) topic =
-  reqid, Subscribe (create_subscribe reqid options topic ())
+  reqid, (subscribe reqid options topic)
