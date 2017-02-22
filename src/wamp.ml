@@ -7,14 +7,14 @@
 open Result
 
 type msgtyp =
-  | HELLO [@value 1]
+  | HELLO
   | WELCOME
   | ABORT
-  | GOODBYE [@value 6]
-  | ERROR [@value 8]
-  | PUBLISH [@value 16]
+  | GOODBYE
+  | ERROR
+  | PUBLISH
   | PUBLISHED
-  | SUBSCRIBE [@value 32]
+  | SUBSCRIBE
   | SUBSCRIBED
   | UNSUBSCRIBE
   | UNSUBSCRIBED
