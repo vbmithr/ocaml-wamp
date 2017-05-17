@@ -1,7 +1,0 @@
-true : safe_string, bin_annot, warn(-40), package(bytes), package(result), package(uri)
-
-<src> : include
-<test> : include
-
-<src/wamp_yojson.*>: package(yojson)
-<src/wamp_msgpck.*>: package(msgpck)

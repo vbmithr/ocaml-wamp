@@ -1,5 +1,5 @@
 all:
-	./build
+	jbuilder build @install @runtest
 
 clean:
-	./build clean
+	rm -rf _build

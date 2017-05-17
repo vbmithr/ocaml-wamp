@@ -1,3 +1,9 @@
+v1.2 2017-05-17 Paris
+---------------------
+
+* Use inline records
+* Switch to jbuilder
+
 v1.1 2017-02-21 Paris
 ---------------------
 
