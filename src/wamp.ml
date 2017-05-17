@@ -51,29 +51,19 @@ let msgtyp_to_enum = function
 
 type 'a dict = (string * 'a) list
 
-type 'a hello = { realm: Uri.t; details: 'a dict }
-type 'a welcome = { id: int; details: 'a dict }
-type 'a details_reason = { details: 'a dict; reason: Uri.t }
-type 'a goodbye = { details: 'a dict; reason: Uri.t }
-type 'a error = { reqtype: int; reqid: int; details: 'a dict; error: Uri.t; args: 'a list; kwArgs: 'a dict }
-type 'a publish = { reqid: int; options: 'a dict; topic: Uri.t; args: 'a list; kwArgs: 'a dict }
-type ack = { reqid: int; id: int }
-type 'a subscribe = { reqid: int; options: 'a dict; topic: Uri.t }
-type 'a event = { subid: int; pubid: int; details: 'a dict; args: 'a list; kwArgs: 'a dict }
-
 type 'a msg =
-  | Hello of 'a hello
-  | Welcome of 'a welcome
-  | Abort of 'a details_reason
-  | Goodbye of 'a details_reason
-  | Error of 'a error
-  | Publish of 'a publish
-  | Published of ack
-  | Subscribe of 'a subscribe
-  | Subscribed of ack
-  | Unsubscribe of ack
+  | Hello of { realm: Uri.t; details: 'a dict }
+  | Welcome of { id: int; details: 'a dict }
+  | Abort of { details: 'a dict; reason: Uri.t }
+  | Goodbye of { details: 'a dict; reason: Uri.t }
+  | Error of { reqtype: int; reqid: int; details: 'a dict; error: Uri.t; args: 'a list; kwArgs: 'a dict }
+  | Publish of { reqid: int; options: 'a dict; topic: Uri.t; args: 'a list; kwArgs: 'a dict }
+  | Published of { reqid: int; id: int }
+  | Subscribe of { reqid: int; options: 'a dict; topic: Uri.t }
+  | Subscribed of { reqid: int; id: int }
+  | Unsubscribe of { reqid: int; id: int }
   | Unsubscribed of int
-  | Event of 'a event
+  | Event of { subid: int; pubid: int; details: 'a dict; args: 'a list; kwArgs: 'a dict }
 
 let hello ~realm ~details = Hello { realm ; details }
 let welcome ~id ~details = Welcome { id ; details }
