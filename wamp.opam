@@ -8,7 +8,7 @@ license: "ISC"
 dev-repo: "https://github.com/vbmithr/ocaml-wamp.git"
 bug-reports: "https://github.com/vbmithr/ocaml-wamp/issues"
 tags: []
-available: [ ocaml-version >= "4.01.0" ]
+available: [ ocaml-version >= "4.03.0" ]
 depends: [
   "jbuilder" {build & >= "1.0+beta8"}
   "result"
