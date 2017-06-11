@@ -92,6 +92,16 @@ type role =
 let string_of_role = function
   | Subscriber -> "subscriber"
   | Publisher -> "publisher"
+
+module type SERIALIZATION = sig
+  type t
+  val parse : t -> (t msg, string) Result.result
+  val print : t msg -> t
+
+  val hello : Uri.t -> role list -> t msg
+  val subscribe : ?reqid:int -> ?options: t dict -> Uri.t -> int * t msg
+end
+
 (*---------------------------------------------------------------------------
    Copyright (c) 2016 Vincent Bernardoff
 

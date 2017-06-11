@@ -1,6 +1,8 @@
 module M = Msgpck
 open Wamp
 
+type t = M.t
+
 let dict_of_map m =  ListLabels.map m ~f:(function M.String k, v -> k, v | _ -> invalid_arg "dict_of_map")
 let map_of_dict d = ListLabels.map d ~f:(fun (k, v) -> M.String k, v)
 
@@ -9,7 +11,7 @@ let remaining_args = function
 | [M.List args; Map kwArgs] -> args, dict_of_map kwArgs
 | _ -> [], []
 
-let msg_of_msgpck = function
+let parse = function
 | M.List (Int typ :: content) -> begin match msgtyp_of_enum typ with
   | None -> Result.Error Printf.(sprintf "msg_of_json: invalid msg type %d" typ)
   | Some HELLO -> begin match content with
@@ -100,7 +102,7 @@ let msg_of_msgpck = function
   end
 | msg -> Error "msg_of_msgpck: msg must be a List"
 
-let msg_to_msgpck = function
+let print = function
 | Hello { realm; details } ->
     let details = map_of_dict details in
     M.List [Int (msgtyp_to_enum HELLO); String (Uri.to_string realm); Map details]

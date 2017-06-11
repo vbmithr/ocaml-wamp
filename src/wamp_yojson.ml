@@ -1,11 +1,13 @@
 open Wamp
 
+type t = Yojson.Safe.json
+
 let remaining_args = function
   | [`List args] -> args, []
   | [`List args; `Assoc kwArgs] -> args, kwArgs
   | _ -> [], []
 
-let msg_of_yojson = function
+let parse = function
   | `List ((`Int typ) :: content) -> begin
       match msgtyp_of_enum typ with
       | None -> Result.Error Printf.(sprintf "msg_of_json: invalid msg type %d" typ)
@@ -92,7 +94,7 @@ let msg_of_yojson = function
     end
   | #Yojson.Safe.json as json -> Error Yojson.Safe.(to_string json)
 
-let msg_to_yojson = function
+let print = function
   | Hello { realm; details } ->
     `List [`Int (msgtyp_to_enum HELLO); `String (Uri.to_string realm); `Assoc details]
   | Welcome { id; details } ->
