@@ -1,1 +1,1 @@
-include Wamp.SERIALIZATION with type t := Msgpck.t
+include Wamp.S with type repr := Msgpck.t

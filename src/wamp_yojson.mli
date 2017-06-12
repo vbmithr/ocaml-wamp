@@ -1,1 +1,1 @@
-include Wamp.SERIALIZATION with type t := Yojson.Safe.json
+include Wamp.S with type repr := Yojson.Safe.json
