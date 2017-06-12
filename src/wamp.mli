@@ -48,6 +48,12 @@ module Element : sig
     | Dict of dict
     | List of arr
 
+  val to_int : t -> int
+  val to_string : t -> string
+  val to_bool : t -> bool
+  val to_dict : t -> dict
+  val to_list : t -> arr
+
   val pp : Format.formatter -> t -> unit
 end
 

@@ -72,8 +72,26 @@ module Element = struct
     | Dict of dict
     | List of arr
 
-  let pp ppf t =
-    Format.fprintf ppf ""
+  let to_int = function Int i -> i | _ -> invalid_arg "Element.to_int"
+  let to_string = function String s -> s | _ -> invalid_arg "Element.to_string"
+  let to_bool = function Bool b -> b | _ -> invalid_arg "Element.to_bool"
+  let to_dict = function Dict d -> d | _ -> invalid_arg "Element.to_dict"
+  let to_list = function List l -> l | _ -> invalid_arg "Element.to_list"
+
+  let rec pp ppf t =
+    let open Format in
+    let pp_sep ppf () = fprintf ppf " ;@ " in
+    let pp_list pp ppf l =
+      pp_print_list ~pp_sep pp ppf l in
+    match t with
+    | Int i -> pp_print_int ppf i
+    | String s -> pp_print_string ppf s
+    | Bool b -> pp_print_bool ppf b
+    | Dict d ->
+        let pp_assoc ppf (k, v) = fprintf ppf "%s = %a" k pp v in
+        Format.fprintf ppf "{@[<hov 0>%a@]}" (pp_list pp_assoc) d
+    | List l ->
+        Format.fprintf ppf "[@[<hov 0>%a@]]" (pp_list pp) l
 end
 
 module type BACKEND = sig
@@ -150,7 +168,30 @@ module Make (B: BACKEND) = struct
     | Event of { subid: int; pubid: int; details: dict; args: arr; kwArgs: dict }
 
   let pp ppf t =
-    Format.fprintf ppf ""
+    let open Format in
+    match t with
+    | Hello { realm ; details } ->
+        fprintf ppf "Hello {@[<hov 1> realm = %a ;@ details = %a }@]"
+          Uri.pp_hum realm pp (Dict details)
+    | Welcome { id ; details } ->
+        fprintf ppf "Welcome {@[<hov 1> id = %d ;@ details = %a }@]"
+          id pp (Dict details)
+    | Abort _ -> fprintf ppf "Abort"
+    | Goodbye _ -> fprintf ppf "Goodbye"
+    | Error _ -> fprintf ppf "Error"
+    | Publish _ -> fprintf ppf "Publish"
+    | Published _ -> fprintf ppf "Published"
+    | Subscribe { reqid ; options ; topic } ->
+        fprintf ppf "Subscribe {@[<hov 1> reqid = %d ;@ options = %a ;@ topic = %a }@]"
+          reqid pp (Dict options) Uri.pp_hum topic
+    | Subscribed { reqid ; id } ->
+        fprintf ppf "Subscribed {@[<hov 1> reqid = %d ;@ id = %d }@]"
+          reqid id
+    | Unsubscribe _ -> fprintf ppf "Unsubscribe"
+    | Unsubscribed _ -> fprintf ppf "Unsubscribed"
+    | Event { subid ; pubid ; details ; args ; kwArgs } ->
+        fprintf ppf "Event {@[<hov 1> subid = %d ;@ pubid = %d ;@ details = %a ;@ args = %a ;@ kwArgs = %a }@]"
+          subid pubid pp (Dict details) pp (List args) pp (Dict kwArgs)
 
   let show t =
     Format.asprintf "%a" pp t
