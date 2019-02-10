@@ -1,7 +1,7 @@
 open StdLabels
 
 module Backend = struct
-  type repr = Yojson.Safe.json
+  type repr = Yojson.Safe.t
 
   let rec of_repr = function
   | `Bool b -> Wamp.Element.Bool b
